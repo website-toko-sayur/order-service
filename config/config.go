@@ -108,12 +108,12 @@ func NewConfig() *Config {
 			ProducerEnabled:  viper.GetBool("KAFKA_PRODUCER_ENABLED"),
 		},
 		Topic: Topic{
-			ProductUpdateStock:      viper.GetString("product-update-stock"),
-			OrderPublish:            viper.GetString("order-publish"),
-			EmailUpdateStatus:       viper.GetString("email-update-status-order"),
-			PublisherDeleteOrder:    viper.GetString("delete-order"),
-			PublisherPaymentSuccess: viper.GetString("payment-success"),
-			PublisherUpdateStatus:   viper.GetString("update-status-order"),
+			ProductUpdateStock:      viper.GetString("TOPIC_PRODUCT_UPDATE_STOCK"),
+			OrderPublish:            viper.GetString("TOPIC_ORDER_PUBLISH"),
+			EmailUpdateStatus:       viper.GetString("TOPIC_EMAIL_UPDATE_STATUS"),
+			PublisherDeleteOrder:    viper.GetString("TOPIC_DELETE_ORDER"),
+			PublisherPaymentSuccess: viper.GetString("TOPIC_PAYMENT_SUCCESS"),
+			PublisherUpdateStatus:   viper.GetString("TOPIC_UPDATE_STATUS_ORDER"),
 		},
 		Redis: Redis{
 			Host:     viper.GetString("REDIS_HOST"),
