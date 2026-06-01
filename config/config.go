@@ -18,6 +18,8 @@ type App struct {
 	GatewaySecretKey  string `json:"gateway_secret_key"`
 	RequestApiGAteway string `json:"request_api_gateway"`
 
+	InternalSecretKey string `json:"internal_secret_key"`
+
 	ServerTimeOut     int    `json:"server_timeout"`
 	ProductServiceUrl string `json:"product_service_url"`
 	UserServiceUrl    string `json:"user_service_url"`
@@ -51,6 +53,7 @@ type Topic struct {
 	PublisherDeleteOrder    string `json:"publisher_delete_order"`
 	PublisherPaymentSuccess string `json:"publisher_payment_success"`
 	PublisherUpdateStatus   string `json:"publisher_update_status"`
+	PushNotifOrder          string `json:"push_notif_order"`
 }
 
 type Redis struct {
@@ -85,6 +88,7 @@ func NewConfig() *Config {
 			JwtSecretKey:      viper.GetString("JWT_SECRET_KEY"),
 			GatewaySecretKey:  viper.GetString("GATEWAY_SECRET_KEY"),
 			RequestApiGAteway: viper.GetString("REQUEST_API_GATEWAY"),
+			InternalSecretKey: viper.GetString("INTERNAL_SECRET_KEY"),
 			ServerTimeOut:     viper.GetInt("SERVER_TIMEOUT"),
 			ProductServiceUrl: viper.GetString("PRODUCT_SERVICE_URL"),
 			UserServiceUrl:    viper.GetString("USER_SERVICE_URL"),
@@ -114,6 +118,7 @@ func NewConfig() *Config {
 			PublisherDeleteOrder:    viper.GetString("TOPIC_DELETE_ORDER"),
 			PublisherPaymentSuccess: viper.GetString("TOPIC_PAYMENT_SUCCESS"),
 			PublisherUpdateStatus:   viper.GetString("TOPIC_UPDATE_STATUS_ORDER"),
+			PushNotifOrder:          viper.GetString("TOPIC_PUSH_NOTIF_ORDER"),
 		},
 		Redis: Redis{
 			Host:     viper.GetString("REDIS_HOST"),

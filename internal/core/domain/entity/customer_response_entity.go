@@ -1,11 +1,11 @@
 package entity
 
 type UserHttpClientResponse struct {
-	Message string                 `json:"message"`
-	Data    CustomerResponseEntity `json:"data"`
+	Message string           `json:"message"`
+	Data    CustomerResponse `json:"data"`
 }
 
-type CustomerResponseEntity struct {
+type CustomerResponse struct {
 	RoleID  int    `json:"role_id"`
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
