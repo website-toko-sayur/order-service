@@ -67,7 +67,8 @@ func NewOrderHandler(
 
 	// internal route
 	internalGroup := app.Group("/internal", midInternal)
-	internalGroup.Get("/orders/:orderID", orderHandler.GetOrderDetail)
+	internalGroup.Get("/orders/:orderCode/code", orderHandler.GetOrderByOrderCodeInternal)
+	internalGroup.Get("/public/orders/:orderCode/code", orderHandler.GetPublicOrderByOrderCode)
 
 	return orderHandler
 }
@@ -658,35 +659,24 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 	})
 }
 
-func (o *orderHandler) GetOrderDetail(c fiber.Ctx) error {
+func (o *orderHandler) GetOrderByOrderCodeInternal(c fiber.Ctx) error {
 	ctx := c.Context()
 
-	orderIDStr := c.Params("orderID")
-	if orderIDStr == "" {
+	orderCode := c.Params("orderCode")
+	if orderCode == "" {
 		log.Info().
-			Str("source", "internal.adapter.orderHandler.GetOrderDetail").
-			Msg("missing or invalid order ID")
+			Str("source", "internal.adapter.orderHandler.GetOrderByOrderCodeInternal").
+			Msg("missing or invalid order code")
 
-		return fiber.NewError(fiber.StatusBadRequest, "missing or invalid order ID")
+		return fiber.NewError(fiber.StatusBadRequest, "missing or invalid order code")
 	}
 
-	orderID, err := conv.StringToInt64(orderIDStr)
-	if err != nil {
-		log.Info().
-			Err(err).
-			Str("order_id", orderIDStr).
-			Str("source", "internal.adapter.orderHandler.GetOrderDetail").
-			Msg("invalid order ID")
-
-		return fiber.NewError(fiber.StatusBadRequest, "invalid order ID")
-	}
-
-	order, err := o.orderService.GetDetailByID(ctx, orderID)
+	order, err := o.orderService.GetOrderByOrderCode(ctx, orderCode)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Int64("order_id", orderID).
-			Str("source", "internal.adapter.orderHandler.GetOrderDetail").
+			Str("order code", orderCode).
+			Str("source", "internal.adapter.orderHandler.GetOrderByOrderCodeInternal").
 			Msg("failed get order")
 
 		if err.Error() == "404" {
@@ -731,7 +721,39 @@ func (o *orderHandler) GetOrderDetail(c fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.DefaultResponse{
-		Message: "success get order detail",
+		Message: "success get order by order code",
 		Data:    respOrder,
+	})
+}
+
+func (o *orderHandler) GetPublicOrderByOrderCodeInternal(c fiber.Ctx) error {
+	ctx := c.Context()
+
+	orderCode := c.Params("orderCode")
+	if orderCode == "" {
+		log.Info().
+			Str("source", "internal.adapter.orderHandler.GetPublicOrderByOrderCodeInternal").
+			Msg("missing or invalid order code")
+		return fiber.NewError(fiber.StatusBadRequest, "missing or invalid order code")
+	}
+
+	order, err := o.orderService.GetPublicOrderIDByOrderCode(ctx, orderCode)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("orderCode", orderCode).
+			Str("source", "internal.adapter.orderHandler.GetPublicOrderByOrderCodeInternal").
+			Msg("failed get order ID")
+		if err.Error() == "404" {
+			return fiber.NewError(fiber.StatusNotFound, "order ID not found")
+		}
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.DefaultResponse{
+		Message: "success get order id",
+		Data: map[string]int64{
+			"orderID": order,
+		},
 	})
 }
