@@ -281,9 +281,11 @@ func (o *orderService) UpdateStatus(ctx context.Context, req entity.OrderEntity)
 
 	if o.sendEmailUpdateStatusOrderProducer != nil {
 		event := &model.SendEmailUpdateStatusEvent{
-			Email:   userResponse.Email,
-			Message: message,
-			UserID:  buyerID,
+			ReceiverEmail:    userResponse.Email,
+			Message:          message,
+			ReceiverID:       buyerID,
+			Subject:          "Update Status Order",
+			NotificationType: "EMAIL",
 		}
 
 		log.Info().
