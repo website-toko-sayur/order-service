@@ -46,7 +46,7 @@ func NewOrderHandler(
 
 	mid := adapter.NewMiddlewareAdapter(cfg, jwtService, redis)
 	midGateway := middleware.GatewayValidationMiddleware(cfg)
-	// midInternal := middleware.InternalValidationMiddleware(cfg)
+	midInternal := middleware.InternalValidationMiddleware(cfg)
 
 	// public route via gateway
 	app.Get("public/orders/:orderCode/code", midGateway, orderHandler.GetPublicOrderByOrderCode)
@@ -64,6 +64,10 @@ func NewOrderHandler(
 	adminGroup.Get("/orders/:orderID", orderHandler.GetByIDAdmin)
 	adminGroup.Put("/orders/:orderID/status", orderHandler.UpdateStatus)
 	adminGroup.Delete("/orders/:orderID", orderHandler.DeleteByID)
+
+	// internal route
+	internalGroup := app.Group("/internal", midInternal)
+	internalGroup.Get("/orders/:orderID", orderHandler.GetOrderDetail)
 
 	return orderHandler
 }
@@ -103,15 +107,6 @@ func (o *orderHandler) GetPublicOrderByOrderCode(c fiber.Ctx) error {
 func (o *orderHandler) GetOrderByOrderCode(c fiber.Ctx) error {
 	ctx := c.Context()
 
-	user, ok := c.Locals("user").(string)
-	if !ok || user == "" {
-		log.Error().
-			Str("source", "internal.adapter.orderHandler.GetOrderByOrderCode").
-			Msg("data token not found")
-
-		return fiber.NewError(fiber.StatusUnauthorized, "data token not valid")
-	}
-
 	orderCode := c.Params("orderCode")
 	if orderCode == "" {
 		log.Info().
@@ -121,7 +116,7 @@ func (o *orderHandler) GetOrderByOrderCode(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "missing or invalid order code")
 	}
 
-	order, err := o.orderService.GetOrderByOrderCode(ctx, orderCode, user)
+	order, err := o.orderService.GetOrderByOrderCode(ctx, orderCode)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -232,15 +227,6 @@ func (o *orderHandler) DeleteByID(c fiber.Ctx) error {
 func (o *orderHandler) GetDetailCustomer(c fiber.Ctx) error {
 	ctx := c.Context()
 
-	user, ok := c.Locals("user").(string)
-	if !ok || user == "" {
-		log.Error().
-			Str("source", "internal.adapter.orderHandler.GetDetailCustomer").
-			Msg("data token not found")
-
-		return fiber.NewError(fiber.StatusUnauthorized, "data token not valid")
-	}
-
 	orderIDStr := c.Params("orderID")
 	if orderIDStr == "" {
 		log.Info().
@@ -261,7 +247,7 @@ func (o *orderHandler) GetDetailCustomer(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid order ID")
 	}
 
-	order, err := o.orderService.GetDetailCustomer(ctx, orderID, user)
+	order, err := o.orderService.GetDetailCustomer(ctx, orderID)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -367,7 +353,7 @@ func (o *orderHandler) GetAllCustomer(c fiber.Ctx) error {
 		BuyerID: userID,
 	}
 
-	results, totalData, totalPage, err := o.orderService.GetAllCustomer(ctx, reqEntity, user)
+	results, totalData, totalPage, err := o.orderService.GetAllCustomer(ctx, reqEntity)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -419,15 +405,6 @@ func (o *orderHandler) UpdateStatus(c fiber.Ctx) error {
 		req = request.OrderUpdateStatusRequest{}
 	)
 
-	user, ok := c.Locals("user").(string)
-	if !ok || user == "" {
-		log.Error().
-			Str("source", "internal.adapter.orderHandler.UpdateStatus").
-			Msg("data token not found")
-
-		return fiber.NewError(fiber.StatusUnauthorized, "data token not valid")
-	}
-
 	if err := c.Bind().Body(&req); err != nil {
 		log.Error().
 			Err(err).
@@ -463,7 +440,7 @@ func (o *orderHandler) UpdateStatus(c fiber.Ctx) error {
 		ID:      orderID,
 	}
 
-	err = o.orderService.UpdateStatus(ctx, reqEntity, user)
+	err = o.orderService.UpdateStatus(ctx, reqEntity)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -493,15 +470,6 @@ func (o *orderHandler) CreateOrder(c fiber.Ctx) error {
 		req = request.CreateOrderRequest{}
 	)
 
-	user, ok := c.Locals("user").(string)
-	if !ok || user == "" {
-		log.Error().
-			Str("source", "internal.adapter.orderHandler.CreateOrder").
-			Msg("data token not found")
-
-		return fiber.NewError(fiber.StatusUnauthorized, "data token not valid")
-	}
-
 	if err := c.Bind().Body(&req); err != nil {
 		log.Error().
 			Err(err).
@@ -530,7 +498,7 @@ func (o *orderHandler) CreateOrder(c fiber.Ctx) error {
 
 	reqEntity.OrderItems = orderDetails
 
-	orderID, err := o.orderService.CreateOrder(ctx, reqEntity, user)
+	orderID, err := o.orderService.CreateOrder(ctx, reqEntity)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -554,15 +522,6 @@ func (o *orderHandler) GetByIDAdmin(c fiber.Ctx) error {
 		respOrder = response.OrderAdminDetail{}
 	)
 
-	user, ok := c.Locals("user").(string)
-	if !ok || user == "" {
-		log.Error().
-			Str("source", "internal.adapter.orderHandler.GetByIDAdmin").
-			Msg("data token not found")
-
-		return fiber.NewError(fiber.StatusUnauthorized, "data token not valid")
-	}
-
 	orderIDStr := c.Params("orderID")
 	if orderIDStr == "" {
 		log.Info().
@@ -583,7 +542,7 @@ func (o *orderHandler) GetByIDAdmin(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid order ID")
 	}
 
-	order, err := o.orderService.GetByID(ctx, orderID, user)
+	order, err := o.orderService.GetByID(ctx, orderID)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -631,15 +590,6 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 		respOrders = []response.OrderAdminList{}
 	)
 
-	user, ok := c.Locals("user").(string)
-	if !ok || user == "" {
-		log.Error().
-			Str("source", "internal.adapter.orderHandler.GetAllAdmin").
-			Msg("data token not found")
-
-		return fiber.NewError(fiber.StatusUnauthorized, "data token not valid")
-	}
-
 	search := c.Query("search")
 
 	page, err := conv.StringToInt64(c.Query("page", "1"))
@@ -664,7 +614,7 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 		Limit:  limit,
 	}
 
-	results, totalData, totalPage, err := o.orderService.GetAll(ctx, reqEntity, user)
+	results, totalData, totalPage, err := o.orderService.GetAll(ctx, reqEntity)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -705,5 +655,83 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 			PerPage:    limit,
 			TotalPage:  totalPage,
 		},
+	})
+}
+
+func (o *orderHandler) GetOrderDetail(c fiber.Ctx) error {
+	ctx := c.Context()
+
+	orderIDStr := c.Params("orderID")
+	if orderIDStr == "" {
+		log.Info().
+			Str("source", "internal.adapter.orderHandler.GetOrderDetail").
+			Msg("missing or invalid order ID")
+
+		return fiber.NewError(fiber.StatusBadRequest, "missing or invalid order ID")
+	}
+
+	orderID, err := conv.StringToInt64(orderIDStr)
+	if err != nil {
+		log.Info().
+			Err(err).
+			Str("order_id", orderIDStr).
+			Str("source", "internal.adapter.orderHandler.GetOrderDetail").
+			Msg("invalid order ID")
+
+		return fiber.NewError(fiber.StatusBadRequest, "invalid order ID")
+	}
+
+	order, err := o.orderService.GetDetailByID(ctx, orderID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Int64("order_id", orderID).
+			Str("source", "internal.adapter.orderHandler.GetOrderDetail").
+			Msg("failed get order")
+
+		if err.Error() == "404" {
+			return fiber.NewError(fiber.StatusNotFound, "order not found")
+		}
+
+		return err
+	}
+
+	respOrder := response.OrderAdminDetail{
+		ID:            order.ID,
+		OrderCode:     order.OrderCode,
+		ProductImage:  "",
+		OrderDatetime: order.OrderDate,
+		Status:        order.Status,
+		PaymentMethod: order.PaymentMethod,
+		ShippingFee:   order.ShippingFee,
+		ShippingType:  order.ShippingType,
+		Remarks:       order.Remarks,
+		TotalAmount:   order.TotalAmount,
+		Customer: response.CustomerOrder{
+			CustomerName:    order.BuyerName,
+			CustomerPhone:   order.BuyerPhone,
+			CustomerAddress: order.BuyerAddress,
+			CustomerEmail:   order.BuyerEmail,
+			CustomerID:      order.BuyerId,
+		},
+		OrderDetail: make([]response.OrderDetail, 0, len(order.OrderItems)),
+	}
+
+	for _, item := range order.OrderItems {
+		respOrder.OrderDetail = append(respOrder.OrderDetail, response.OrderDetail{
+			ProductName:  item.ProductName,
+			ProductImage: item.ProductImage,
+			ProductPrice: item.Price,
+			Quantity:     item.Quantity,
+		})
+
+		if respOrder.ProductImage == "" {
+			respOrder.ProductImage = item.ProductImage
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.DefaultResponse{
+		Message: "success get order detail",
+		Data:    respOrder,
 	})
 }

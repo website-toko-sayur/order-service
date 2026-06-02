@@ -32,14 +32,15 @@ type orderService struct {
 }
 
 type OrderServiceInterface interface {
-	GetAll(ctx context.Context, queryString entity.QueryStringEntity, accessToken string) ([]entity.OrderEntity, int64, int64, error)
-	GetByID(ctx context.Context, orderID int64, accessToken string) (*entity.OrderEntity, error)
-	CreateOrder(ctx context.Context, req entity.OrderEntity, accessToken string) (int64, error)
-	UpdateStatus(ctx context.Context, req entity.OrderEntity, accessToken string) error
-	GetAllCustomer(ctx context.Context, queryString entity.QueryStringEntity, accessToken string) ([]entity.OrderEntity, int64, int64, error)
-	GetDetailCustomer(ctx context.Context, orderID int64, accessToken string) (*entity.OrderEntity, error)
+	GetAll(ctx context.Context, queryString entity.QueryStringEntity) ([]entity.OrderEntity, int64, int64, error)
+	GetByID(ctx context.Context, orderID int64) (*entity.OrderEntity, error)
+	CreateOrder(ctx context.Context, req entity.OrderEntity) (int64, error)
+	UpdateStatus(ctx context.Context, req entity.OrderEntity) error
+	GetAllCustomer(ctx context.Context, queryString entity.QueryStringEntity) ([]entity.OrderEntity, int64, int64, error)
+	GetDetailCustomer(ctx context.Context, orderID int64) (*entity.OrderEntity, error)
+	GetDetailByID(ctx context.Context, orderID int64) (*entity.OrderEntity, error)
 	DeleteByID(ctx context.Context, orderID int64) error
-	GetOrderByOrderCode(ctx context.Context, orderCode, accessToken string) (*entity.OrderEntity, error)
+	GetOrderByOrderCode(ctx context.Context, orderCode string) (*entity.OrderEntity, error)
 	GetPublicOrderIDByOrderCode(ctx context.Context, orderCode string) (int64, error)
 }
 
@@ -81,7 +82,7 @@ func (o *orderService) GetPublicOrderIDByOrderCode(ctx context.Context, orderCod
 	return result.ID, nil
 }
 
-func (o *orderService) GetOrderByOrderCode(ctx context.Context, orderCode string, accessToken string) (*entity.OrderEntity, error) {
+func (o *orderService) GetOrderByOrderCode(ctx context.Context, orderCode string) (*entity.OrderEntity, error) {
 	result, err := o.repo.GetOrderByOrderCode(ctx, orderCode)
 	if err != nil {
 		log.Error().
@@ -156,7 +157,7 @@ func (o *orderService) DeleteByID(ctx context.Context, orderID int64) error {
 	return nil
 }
 
-func (o *orderService) GetDetailCustomer(ctx context.Context, orderID int64, accessToken string) (*entity.OrderEntity, error) {
+func (o *orderService) GetDetailCustomer(ctx context.Context, orderID int64) (*entity.OrderEntity, error) {
 	result, err := o.repo.GetByID(ctx, orderID)
 	if err != nil {
 		log.Error().
@@ -202,7 +203,7 @@ func (o *orderService) GetDetailCustomer(ctx context.Context, orderID int64, acc
 	return result, nil
 }
 
-func (o *orderService) GetAllCustomer(ctx context.Context, queryString entity.QueryStringEntity, accessToken string) ([]entity.OrderEntity, int64, int64, error) {
+func (o *orderService) GetAllCustomer(ctx context.Context, queryString entity.QueryStringEntity) ([]entity.OrderEntity, int64, int64, error) {
 	results, count, total, err := o.elasticRepo.SearchOrderElasticByBuyerId(ctx, queryString, queryString.BuyerID)
 	if err == nil {
 		return results, count, total, nil
@@ -258,7 +259,7 @@ func (o *orderService) GetAllCustomer(ctx context.Context, queryString entity.Qu
 	return results, count, total, nil
 }
 
-func (o *orderService) UpdateStatus(ctx context.Context, req entity.OrderEntity, accessToken string) error {
+func (o *orderService) UpdateStatus(ctx context.Context, req entity.OrderEntity) error {
 	buyerID, statusOrder, orderCode, err := o.repo.UpdateStatus(ctx, req)
 	if err != nil {
 		log.Error().
@@ -352,7 +353,7 @@ func (o *orderService) UpdateStatus(ctx context.Context, req entity.OrderEntity,
 	return nil
 }
 
-func (o *orderService) CreateOrder(ctx context.Context, req entity.OrderEntity, accessToken string) (int64, error) {
+func (o *orderService) CreateOrder(ctx context.Context, req entity.OrderEntity) (int64, error) {
 	req.OrderCode = conv.GenerateOrderCode()
 	shippingFee := 0
 	if req.ShippingType == "Delivery" {
@@ -368,7 +369,7 @@ func (o *orderService) CreateOrder(ctx context.Context, req entity.OrderEntity, 
 		return 0, err
 	}
 
-	resultData, err := o.GetByID(ctx, orderID, accessToken)
+	resultData, err := o.GetByID(ctx, orderID)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -456,7 +457,7 @@ func (o *orderService) CreateOrder(ctx context.Context, req entity.OrderEntity, 
 	return orderID, nil
 }
 
-func (o *orderService) GetByID(ctx context.Context, orderID int64, accessToken string) (*entity.OrderEntity, error) {
+func (o *orderService) GetByID(ctx context.Context, orderID int64) (*entity.OrderEntity, error) {
 	result, err := o.repo.GetByID(ctx, orderID)
 	if err != nil {
 		log.Error().
@@ -497,7 +498,7 @@ func (o *orderService) GetByID(ctx context.Context, orderID int64, accessToken s
 	return result, nil
 }
 
-func (o *orderService) GetAll(ctx context.Context, queryString entity.QueryStringEntity, accessToken string) ([]entity.OrderEntity, int64, int64, error) {
+func (o *orderService) GetAll(ctx context.Context, queryString entity.QueryStringEntity) ([]entity.OrderEntity, int64, int64, error) {
 	results, count, total, err := o.elasticRepo.SearchOrderElastic(ctx, queryString)
 	if err == nil {
 		return results, count, total, nil
@@ -633,4 +634,50 @@ func (o *orderService) httpClientProductService(requestID string, productID int6
 	}
 
 	return &productResponse.Data, nil
+}
+
+func (o *orderService) GetDetailByID(ctx context.Context, orderID int64) (*entity.OrderEntity, error) {
+	result, err := o.repo.GetByID(ctx, orderID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("source", "internal.core.orderService.GetDetailByID")
+		return nil, err
+	}
+
+	requestID := uuid.NewString()
+
+	userResponse, err := o.httpClientUserService(requestID, result.BuyerId)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("source", "internal.core.orderService.GetDetailByID")
+		return nil, err
+	}
+
+	result.BuyerName = userResponse.Name
+	result.BuyerEmail = userResponse.Email
+	result.BuyerPhone = userResponse.Phone
+	result.BuyerAddress = userResponse.Address
+
+	for key, val := range result.OrderItems {
+		productResponse, err := o.httpClientProductService(requestID, val.ProductID)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("source", "internal.core.orderService.GetDetailByID")
+			return nil, err
+		}
+
+		result.OrderItems[key].ProductImage = productResponse.Image
+		if productResponse.Child != nil {
+			result.OrderItems[key].ProductImage = productResponse.Child[0].Image
+		}
+		result.OrderItems[key].ProductName = productResponse.Name
+		result.OrderItems[key].Price = int64(productResponse.SalePrice)
+		result.OrderItems[key].ProductWeight = int64(productResponse.Weight)
+		result.OrderItems[key].ProductUnit = productResponse.Unit
+	}
+
+	return result, nil
 }
