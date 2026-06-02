@@ -305,8 +305,12 @@ func (o *orderService) UpdateStatus(ctx context.Context, req entity.OrderEntity)
 
 	if o.sendpushNotifUpdateStatusOrderProducer != nil {
 		event := &model.SendPushNotifOrderUpdateStatusEvent{
-			Message: message,
-			UserID:  buyerID,
+			ReceiverEmail:    "",
+			Message:          message,
+			ReceiverID:       buyerID,
+			Subject:          "Update Status Order",
+			NotificationType: "PUSH",
+			Type:             "UPDATE_STATUS",
 		}
 
 		log.Info().
