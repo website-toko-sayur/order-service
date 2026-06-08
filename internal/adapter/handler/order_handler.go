@@ -70,6 +70,7 @@ func NewOrderHandler(
 	internalGroup := app.Group("/internal", midInternal)
 	internalGroup.Get("/orders/:orderCode/code", orderHandler.GetOrderByOrderCodeInternal)
 	internalGroup.Get("/public/orders/:orderCode/code", orderHandler.GetPublicOrderByOrderCode)
+	internalGroup.Get("/orders/:orderID", orderHandler.GetDetailCustomer)
 
 	return orderHandler
 }
