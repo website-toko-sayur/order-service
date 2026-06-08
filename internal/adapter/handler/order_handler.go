@@ -483,12 +483,13 @@ func (o *orderHandler) CreateOrder(c fiber.Ctx) error {
 	}
 
 	reqEntity := entity.OrderEntity{
-		BuyerId:      req.BuyerID,
-		OrderDate:    req.OrderDate,
-		TotalAmount:  req.TotalAmount,
-		ShippingType: req.ShippingType,
-		Remarks:      req.Remarks,
-		OrderTime:    req.OrderTime,
+		BuyerId:       req.BuyerID,
+		OrderDate:     req.OrderDate,
+		TotalAmount:   req.TotalAmount,
+		ShippingType:  req.ShippingType,
+		Remarks:       req.Remarks,
+		OrderTime:     req.OrderTime,
+		PaymentMethod: req.PaymentMethod,
 	}
 
 	orderDetails := []entity.OrderItemEntity{}
@@ -647,6 +648,7 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 			TotalAmount:   result.TotalAmount,
 			ProductImage:  productImage,
 			CustomerName:  result.BuyerName,
+			PaymentMethod: result.PaymentMethod,
 		})
 	}
 

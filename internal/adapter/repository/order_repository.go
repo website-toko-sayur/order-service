@@ -89,16 +89,17 @@ func (o *orderRepository) CreateOrder(ctx context.Context, req entity.OrderEntit
 	}
 
 	modelOrder := model.Order{
-		OrderCode:    req.OrderCode,
-		BuyerId:      req.BuyerId,
-		OrderDate:    orderDate,
-		OrderTime:    req.OrderTime,
-		Status:       req.Status,
-		TotalAmount:  float64(req.TotalAmount),
-		ShippingType: req.ShippingType,
-		ShippingFee:  float64(req.ShippingFee),
-		Remarks:      req.Remarks,
-		OrderItems:   orderItems,
+		OrderCode:     req.OrderCode,
+		BuyerId:       req.BuyerId,
+		OrderDate:     orderDate,
+		OrderTime:     req.OrderTime,
+		Status:        req.Status,
+		TotalAmount:   float64(req.TotalAmount),
+		ShippingType:  req.ShippingType,
+		ShippingFee:   float64(req.ShippingFee),
+		Remarks:       req.Remarks,
+		OrderItems:    orderItems,
+		PaymentMethod: req.PaymentMethod,
 	}
 
 	if err := o.db.Create(&modelOrder).Error; err != nil {
