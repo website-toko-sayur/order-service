@@ -638,12 +638,13 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 		}
 
 		respOrders = append(respOrders, response.OrderAdminList{
-			ID:           result.ID,
-			OrderCode:    result.OrderCode,
-			Status:       result.Status,
-			TotalAmount:  result.TotalAmount,
-			ProductImage: productImage,
-			CustomerName: result.BuyerName,
+			ID:            result.ID,
+			OrderCode:     result.OrderCode,
+			OrderDateTime: result.OrderDate,
+			Status:        result.Status,
+			TotalAmount:   result.TotalAmount,
+			ProductImage:  productImage,
+			CustomerName:  result.BuyerName,
 		})
 	}
 

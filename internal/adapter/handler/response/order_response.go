@@ -3,6 +3,7 @@ package response
 type OrderAdminList struct {
 	ID            int64  `json:"id"`
 	OrderCode     string `json:"order_code"`
+	OrderDateTime string `json:"order_datetime"`
 	ProductImage  string `json:"product_image"`
 	CustomerName  string `json:"customer_name"`
 	Status        string `json:"status"`
