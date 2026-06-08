@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"order-service/config"
 	"order-service/internal/adapter"
 	"order-service/internal/adapter/handler/request"
@@ -384,7 +385,7 @@ func (o *orderHandler) GetAllCustomer(c fiber.Ctx) error {
 			Weight:        result.OrderItems[0].ProductWeight,
 			Unit:          result.OrderItems[0].ProductUnit,
 			Quantity:      result.OrderItems[0].Quantity,
-			OrderDateTime: result.OrderDate,
+			OrderDateTime: fmt.Sprintf("%s %s", result.OrderDate, result.OrderTime),
 		})
 	}
 
@@ -640,7 +641,7 @@ func (o *orderHandler) GetAllAdmin(c fiber.Ctx) error {
 		respOrders = append(respOrders, response.OrderAdminList{
 			ID:            result.ID,
 			OrderCode:     result.OrderCode,
-			OrderDateTime: result.OrderDate,
+			OrderDateTime: fmt.Sprintf("%s %s", result.OrderDate, result.OrderTime),
 			Status:        result.Status,
 			TotalAmount:   result.TotalAmount,
 			ProductImage:  productImage,
