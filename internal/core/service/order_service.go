@@ -114,8 +114,8 @@ func (o *orderService) GetOrderByOrderCode(ctx context.Context, orderCode string
 			return nil, err
 		}
 
-		result.OrderItems[key].ProductImage = productResponse.Image
-		result.OrderItems[key].ProductName = productResponse.Name
+		result.OrderItems[key].ProductImage = productResponse.ProductImage
+		result.OrderItems[key].ProductName = productResponse.ProductName
 		result.OrderItems[key].Price = int64(productResponse.SalePrice)
 	}
 
@@ -189,11 +189,11 @@ func (o *orderService) GetDetailCustomer(ctx context.Context, orderID int64) (*e
 			return nil, err
 		}
 
-		result.OrderItems[key].ProductImage = productResponse.Image
+		result.OrderItems[key].ProductImage = productResponse.ProductImage
 		if productResponse.Child != nil {
-			result.OrderItems[key].ProductImage = productResponse.Child[0].Image
+			result.OrderItems[key].ProductImage = productResponse.Child[0].ProductImage
 		}
-		result.OrderItems[key].ProductName = productResponse.Name
+		result.OrderItems[key].ProductName = productResponse.ProductName
 		result.OrderItems[key].Price = int64(productResponse.SalePrice)
 		result.OrderItems[key].ProductWeight = int64(productResponse.Weight)
 		result.OrderItems[key].ProductUnit = productResponse.Unit
@@ -246,8 +246,8 @@ func (o *orderService) GetAllCustomer(ctx context.Context, queryString entity.Qu
 				return nil, 0, 0, err
 			}
 
-			val.OrderItems[key2].ProductImage = productResponse.Image
-			val.OrderItems[key2].ProductName = productResponse.Name
+			val.OrderItems[key2].ProductImage = productResponse.ProductImage
+			val.OrderItems[key2].ProductName = productResponse.ProductName
 			val.OrderItems[key2].Price = int64(productResponse.SalePrice)
 			val.OrderItems[key2].Quantity = res.Quantity
 			val.OrderItems[key2].ProductUnit = productResponse.Unit
@@ -495,8 +495,8 @@ func (o *orderService) GetByID(ctx context.Context, orderID int64) (*entity.Orde
 			return nil, err
 		}
 
-		result.OrderItems[key].ProductImage = productResponse.Image
-		result.OrderItems[key].ProductName = productResponse.Name
+		result.OrderItems[key].ProductImage = productResponse.ProductImage
+		result.OrderItems[key].ProductName = productResponse.ProductName
 		result.OrderItems[key].Price = int64(productResponse.SalePrice)
 	}
 
@@ -544,7 +544,7 @@ func (o *orderService) GetAll(ctx context.Context, queryString entity.QueryStrin
 				return nil, 0, 0, err
 			}
 
-			val.OrderItems[key2].ProductImage = productResponse.Image
+			val.OrderItems[key2].ProductImage = productResponse.ProductImage
 		}
 	}
 
@@ -597,7 +597,7 @@ func (o *orderService) httpClientUserService(requestID string, userID int64) (*e
 }
 
 func (o *orderService) httpClientProductService(requestID string, productID int64) (*entity.ProductResponseEntity, error) {
-	baseUrlUser := fmt.Sprintf("%s/%s", o.cfg.App.UserServiceUrl, "internal/products/"+strconv.FormatInt(productID, 10))
+	baseUrlUser := fmt.Sprintf("%s/%s", o.cfg.App.ProductServiceUrl, "internal/products/"+strconv.FormatInt(productID, 10))
 	header := map[string]string{
 		"X-Internal-Service": "true",
 		"X-Internal-Secret":  o.cfg.App.InternalSecretKey,
