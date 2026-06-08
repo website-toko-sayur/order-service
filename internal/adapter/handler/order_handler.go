@@ -387,6 +387,7 @@ func (o *orderHandler) GetAllCustomer(c fiber.Ctx) error {
 			Unit:          result.OrderItems[0].ProductUnit,
 			Quantity:      result.OrderItems[0].Quantity,
 			OrderDateTime: fmt.Sprintf("%s %s", result.OrderDate, result.OrderTime),
+			PaymentMethod: result.PaymentMethod,
 		})
 	}
 
@@ -565,6 +566,7 @@ func (o *orderHandler) GetByIDAdmin(c fiber.Ctx) error {
 	respOrder.OrderDatetime = order.OrderDate
 	respOrder.ShippingFee = order.ShippingFee
 	respOrder.Remarks = order.Remarks
+	respOrder.PaymentMethod = order.PaymentMethod
 	respOrder.Customer = response.CustomerOrder{
 		CustomerName:    order.BuyerName,
 		CustomerPhone:   order.BuyerPhone,

@@ -258,14 +258,15 @@ func (o *orderRepository) GetAll(ctx context.Context, queryString entity.QuerySt
 			})
 		}
 		entities = append(entities, entity.OrderEntity{
-			ID:          val.ID,
-			OrderCode:   val.OrderCode,
-			Status:      val.Status,
-			OrderDate:   val.OrderDate.Format("2006-01-02"),
-			OrderTime:   val.OrderTime,
-			TotalAmount: int64(val.TotalAmount),
-			OrderItems:  orderItemEntities,
-			BuyerId:     val.BuyerId,
+			ID:            val.ID,
+			OrderCode:     val.OrderCode,
+			Status:        val.Status,
+			OrderDate:     val.OrderDate.Format("2006-01-02"),
+			OrderTime:     val.OrderTime,
+			TotalAmount:   int64(val.TotalAmount),
+			OrderItems:    orderItemEntities,
+			BuyerId:       val.BuyerId,
+			PaymentMethod: val.PaymentMethod,
 		})
 	}
 
@@ -305,15 +306,16 @@ func (o *orderRepository) GetByID(ctx context.Context, orderID int64) (*entity.O
 	}
 
 	return &entity.OrderEntity{
-		ID:           modelOrder.ID,
-		OrderCode:    modelOrder.OrderCode,
-		Status:       modelOrder.Status,
-		BuyerId:      modelOrder.BuyerId,
-		OrderDate:    modelOrder.OrderDate.Format("2006-01-02 15:04:05"),
-		TotalAmount:  int64(modelOrder.TotalAmount),
-		OrderItems:   orderItemEntities,
-		Remarks:      modelOrder.Remarks,
-		ShippingType: modelOrder.ShippingType,
-		ShippingFee:  int64(modelOrder.ShippingFee),
+		ID:            modelOrder.ID,
+		OrderCode:     modelOrder.OrderCode,
+		Status:        modelOrder.Status,
+		BuyerId:       modelOrder.BuyerId,
+		OrderDate:     modelOrder.OrderDate.Format("2006-01-02 15:04:05"),
+		TotalAmount:   int64(modelOrder.TotalAmount),
+		OrderItems:    orderItemEntities,
+		Remarks:       modelOrder.Remarks,
+		ShippingType:  modelOrder.ShippingType,
+		ShippingFee:   int64(modelOrder.ShippingFee),
+		PaymentMethod: modelOrder.PaymentMethod,
 	}, nil
 }
