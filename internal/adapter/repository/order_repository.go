@@ -158,31 +158,42 @@ func (o *orderRepository) UpdateStatus(ctx context.Context, req entity.OrderEnti
 		return 0, "", "", errors.New("404")
 	}
 
-	if modelOrder.Status == "Pending" && (req.Status != "Confirmed" && req.Status != "Cancelled") {
-		log.Warn().
-			Str("source", "internal.adapter.orderRepository.UpdateStatus").
-			Msg("invalid status transition from Pending")
-		return 0, "", "", errors.New("400")
+	// key -> status saat ini; value -> status yang boleh dituju
+	allowedTransitions := map[string][]string{
+		"Pending":   {"Confirmed", "Cancelled"},
+		"Confirmed": {"Process", "Cancelled"},
+		"Process":   {"Sending", "Cancelled"},
+		"Sending":   {"Done"},
+		"Done":      {},
+		"Cancelled": {},
 	}
 
-	if modelOrder.Status == "Confirmed" && (req.Status != "Process" && req.Status != "Cancelled") {
-		log.Warn().
-			Str("source", "internal.adapter.orderRepository.UpdateStatus").
-			Msg("invalid status transition from Confirmed")
-		return 0, "", "", errors.New("400")
+	allowed := false
+
+	/*
+		 allowed := false
+
+		for _, status := range []string{"Confirmed", "Cancelled"} {
+				if status == "Confirmed" {
+					allowed = true
+					break
+				}
+		}
+	*/
+	for _, status := range allowedTransitions[modelOrder.Status] {
+		if status == req.Status {
+			allowed = true
+			break
+		}
 	}
 
-	if modelOrder.Status == "Process" && (req.Status != "Sending" && req.Status != "Cancelled") {
+	if !allowed {
 		log.Warn().
 			Str("source", "internal.adapter.orderRepository.UpdateStatus").
-			Msg("invalid status transition from Process")
-		return 0, "", "", errors.New("400")
-	}
+			Str("current_status", modelOrder.Status).
+			Str("new_status", req.Status).
+			Msg("invalid status transition")
 
-	if modelOrder.Status == "Sending" && (req.Status != "Done" && req.Status != "Cancelled") {
-		log.Warn().
-			Str("source", "internal.adapter.orderRepository.UpdateStatus").
-			Msg("invalid status transition from Sending")
 		return 0, "", "", errors.New("400")
 	}
 
